@@ -1,5 +1,5 @@
 <template>
   <div class="flex flex-col h-screen justify-between">
-      <slot />
+    <slot />
   </div>
 </template>
