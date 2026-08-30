@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import type { FormSubmitEvent, InputMenuItem } from '@nuxt/ui'
 import * as z from 'zod'
+import type { Player } from '~~/generated/prisma/client'
 
 // const { loggedIn, user, fetch } = useUserSession()
 
-const players = (await $fetch('/api/player/list', {
+const players = (await $fetch<Player[]>('/api/player/list', {
   method: 'GET'
-})).map((x) => {
+})).map((x: Player) => {
   return {
     id: x.id,
     label: x.fullName + ' [' + x.name + ']'
