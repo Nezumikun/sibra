@@ -1,5 +1,5 @@
 <template>
   <div>
-    <TaMaRA />
+    <SiBRA />
   </div>
 </template>

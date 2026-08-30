@@ -1,23 +1,27 @@
 <script lang="ts" setup>
-const { loggedIn, user, session, fetch } = useUserSession()
+const { loggedIn, user, session } = useUserSession()
+// const { loggedIn, user, session, fetch } = useUserSession()
+// const nuxtApp = useNuxtApp()
 
-async function updateSession() {
-  if (loggedIn) {
-    console.log('Надо бы обновить сессию', new Date())
-    try {
-      await $fetch('/api/session/update', {
-        method: 'GET'
-      })
-      await fetch()
-      console.log(session.value)
-    } catch (err) {
-      console.log(err)
-    }
-  }
-  // setTimeout(updateSession, 10 * 1000)
-}
+// async function updateSession(nuxtApp: NuxtApp) {
+//   await nuxtApp.runWithContext(async () => {
+//     if (loggedIn) {
+//       console.log('Надо бы обновить сессию', new Date())
+//       try {
+//         await $fetch('/api/session/update', {
+//           method: 'GET'
+//         })
+//         await fetch()
+//         console.log(session.value)
+//       } catch (err) {
+//         console.log(err)
+//       }
+//     }
+//   })
+//   // setTimeout(updateSession, 10 * 1000)
+// }
 
-await updateSession()
+// await updateSession(nuxtApp)
 </script>
 
 <template>
