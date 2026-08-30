@@ -32,6 +32,7 @@
 .animated {
   color: #CD3232;
   animation: fadein 2s ease-in-out;
+  text-decoration: none;
 }
 
 @keyframes fadein {
