@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+  enum Role {
+    PLAYER
+    ADMIN
+  }
+
+  enum Place {
+    EAST
+    SOUTH
+    WEST
+    NORTH
+  }
+
+  model Player {
+    id          Int          @id @default(autoincrement())
+    uuid        String       @unique @default(uuid())
+    email       String       @unique
+    password    String
+    name        String
+    fullName    String
+    role        Role         @default(PLAYER)
+    createdAt   DateTime     @default(now())
+    gameCreator Game[]
+    players     GamePlayer[]
+  }
+
+model Game {
+  id          Int          @id @default(autoincrement())
+  uuid        String       @unique @default(uuid())
+  createdAt   DateTime     @default(now())
+  createdById Int
+  createdBy   Player       @relation(fields: [createdById], references: [id])
+  finished    Boolean      @default(false)
+  finishedAt  DateTime?
+  roundLimit  Int
+  players     GamePlayer[]
+}
+
+model GamePlayer {
+  id           Int    @id @default(autoincrement())
+  gameId       Int
+  game         Game   @relation(fields: [gameId], references: [id])
+  playerId     Int
+  player       Player @relation(fields: [playerId], references: [id])
+  initialPlace Place
+
+  @@unique([gameId, initialPlace])
+}
