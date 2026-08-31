@@ -14,7 +14,6 @@ export default defineEventHandler(async (event) => {
       email: email
     }
   })
-  console.log ('player', player)
 
   if (player) {
     const match = await bcrypt.compare(password, player.password)
