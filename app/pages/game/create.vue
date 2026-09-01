@@ -1,119 +1,52 @@
 <script setup lang="ts">
-import type { FormSubmitEvent, InputMenuItem } from '@nuxt/ui'
-import * as z from 'zod'
-import type { Player } from '~~/generated/prisma/client'
+import { LazyGameCreateSettingsModal } from '#components'
+import type { GameCreateSettings } from '~/types/GameCreateSettings'
+import { Place } from '~~/generated/prisma/enums'
 
-// const { loggedIn, user, fetch } = useUserSession()
-
-const players = (await $fetch<Player[]>('/api/player/list', {
-  method: 'GET'
-})).map((x: Player) => {
-  return {
-    id: x.id,
-    label: x.fullName + ' [' + x.name + ']'
-  }
-})
-const items = ref<InputMenuItem[]>(players)
-
-const schema = z.object({
-  east: z.int().positive('Не выбран игрок'),
-  south: z.int().positive('Не выбран игрок'),
-  west: z.int().positive('Не выбран игрок'),
-  north: z.int().positive('Не выбран игрок'),
-  roundLimit: z.int().positive()
+const settings = ref<GameCreateSettings>({
+  playerCount: 4,
+  gameLimit: 10,
+  emptyPlace: null,
+  random: false
 })
 
-type Schema = z.output<typeof schema>
+const overlay = useOverlay()
 
-const state = reactive<Partial<Schema>>({
-  east: undefined,
-  south: undefined,
-  west: undefined,
-  north: undefined,
-  roundLimit: 4
-})
+const modal = overlay.create(LazyGameCreateSettingsModal)
 
-const toast = useToast()
+async function open() {
+  const instance = modal.open({
+    settings: settings.value
+  })
 
-async function onSubmit(event: FormSubmitEvent<Schema>) {
-  try {
-    await $fetch('/api/game/create', {
-      method: 'POST',
-      body: event.data
-    })
-    await navigateTo('/game/current')
-  } catch (err) {
-    console.log('Ошибка входа', err)
-    toast.add({ title: 'Ошибка', description: 'Не удалось создать игру', color: 'error', duration: 2000 })
+  const settingsReult = await instance.result
+  if (settingsReult) {
+    settings.value = settingsReult
   }
 }
+onMounted(async () => {
+  await open()
+})
 </script>
 
 <template>
   <UContainer>
-    <h1 class="font-bold text-xl pt-4">
+    <h1 class="font-bold text-xl py-4">
       Новая игра
     </h1>
-    <UForm
-      :schema="schema"
-      :state="state"
-      class="space-y-4"
-      @submit.prevent="onSubmit($event)"
+    <div>
+      Игроков: {{ settings.playerCount }}
+    </div>
+    <div>
+      Рассадка: {{ settings.random ? 'Случайная' : 'Фиксированная' }}
+    </div>
+    <div>
+      Колличество сдач: {{ settings.gameLimit }}
+    </div>
+    <div
+      v-if="settings.playerCount === 3"
     >
-      <UFormField
-        label="東 Восток"
-        name="east"
-        class="pt-2"
-      >
-        <UInputMenu
-          v-model="state.east"
-          value-key="id"
-          :items="items"
-          class="w-full md:w-auto"
-        />
-      </UFormField>
-      <UFormField
-        label="南 Юг"
-        name="south"
-        class="pt-2"
-      >
-        <UInputMenu
-          v-model="state.south"
-          value-key="id"
-          :items="items"
-          class="w-full md:w-auto"
-        />
-      </UFormField>
-      <UFormField
-        label="西 Запад"
-        name="west"
-        class="pt-2"
-      >
-        <UInputMenu
-          v-model="state.west"
-          value-key="id"
-          :items="items"
-          class="w-full md:w-auto"
-        />
-      </UFormField>
-      <UFormField
-        label="北, Север"
-        name="north"
-        class="pt-2"
-      >
-        <UInputMenu
-          v-model="state.north"
-          value-key="id"
-          :items="items"
-          class="w-full md:w-auto"
-        />
-      </UFormField>
-      <UButton
-        type="submit"
-        class="button-taiwanese p-2 w-full md:w-auto"
-      >
-        Начать игру
-      </UButton>
-    </UForm>
+      Игрок отсутсвует на {{ settings.emptyPlace === Place.EAST ? 'востоке' : settings.emptyPlace === Place.SOUTH ? 'юге' : settings.emptyPlace === Place.WEST ? 'западе' : settings.emptyPlace === Place.NORTH ? 'севере' : '' }}
+    </div>
   </UContainer>
 </template>>
