@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { FormError, FormSubmitEvent, RadioGroupItem } from '@nuxt/ui'
+import ErrorList from '~/components/common/ErrorList.vue';
 import type { GameCreateSettings } from '~/types/GameCreateSettings'
 import type { Nullable } from '~/types/Nullable'
 import { Place } from '~~/generated/prisma/enums'
@@ -8,13 +9,9 @@ const props = defineProps<{
   settings: GameCreateSettings
 }>()
 
-const playerCountItems = ref(['3', '4'])
+const playerCountItems = ref(['4', '3'])
 const gameCountItems = ref(['1', '4', '8', '10', '16'])
 const placeItems = ref<RadioGroupItem[]>([
-  {
-    label: '東 Восток',
-    value: 'EAST'
-  },
   {
     label: '南 Юг',
     value: 'SOUTH'
@@ -28,6 +25,8 @@ const placeItems = ref<RadioGroupItem[]>([
     value: 'NORTH'
   }
 ])
+const errors = ref<string[]>([])
+
 
 const emit = defineEmits<{ close: [Nullable<GameCreateSettings>] }>()
 
@@ -45,20 +44,17 @@ const state = ref<stateInterface>({
   emptyPlace: props.settings.emptyPlace ? props.settings.emptyPlace.toString() : null
 })
 
-type Schema = typeof state
-
-async function onSubmit(event: FormSubmitEvent<Schema>) {
-  console.log('onSubmit', event.data)
-  save()
-}
-
 function validate(data: Partial<stateInterface>): FormError[] {
-  const errors = []
-  console.log('validate', data)
-  if (data.playerCount === '3' && data.emptyPlace == null) errors.push({ name: 'emptyPlace', message: 'Required' })
+  errors.value = []
+  if (state.value.playerCount === '4') {
+    state.value.emptyPlace = null
+  }
+  else if (state.value.playerCount === '3' && state.value.emptyPlace == null) {
+    errors.value.push('Необходимо указать на каком месте нет игрока')
+  }
   // if (!state.password) errors.push({ name: 'password', message: 'Required' })
-  console.log(errors)
-  return errors
+  console.log(errors.value)
+  return []
 }
 
 async function save() {
@@ -66,9 +62,9 @@ async function save() {
     playerCount: state.value.playerCount === '3' ? 3 : 4,
     gameLimit: state.value.gameLimit === '16' ? 16 : state.value.gameLimit === '10' ? 10 : state.value.gameLimit === '8' ? 8 : state.value.gameLimit === '4' ? 4 : 1,
     random: state.value.random!,
-    emptyPlace: state.value.playerCount === '4' ? null : state.value.emptyPlace === 'EAST' ? Place.EAST : state.value.emptyPlace === 'SOUTH' ? Place.SOUTH : state.value.emptyPlace === 'WEST' ? Place.WEST : state.value.emptyPlace === 'NORTH' ? Place.NORTH : null
+    emptyPlace: state.value.playerCount === '4' ? null : state.value.emptyPlace === 'SOUTH' ? Place.SOUTH : state.value.emptyPlace === 'WEST' ? Place.WEST : state.value.emptyPlace === 'NORTH' ? Place.NORTH : null
   }
-  console.log('save ', value)
+  // console.log('save ', value)
   emit('close', value)
 }
 </script>
@@ -85,7 +81,6 @@ async function save() {
           class="w-full"
           :state="state"
           :validate="validate"
-          @submit="onSubmit"
         >
           <UFormField
             label="Количество игроков"
@@ -109,6 +104,15 @@ async function save() {
             />
           </UFormField>
           <UFormField
+            label="Случайная рассадка"
+            name="random"
+          >
+            <UCheckbox
+              v-model="state.random"
+              :label="state.random ? 'Включена' : 'Выключена'"
+            />
+          </UFormField>
+          <UFormField
             label="Количество сдач"
             name="gameLimit"
           >
@@ -119,17 +123,7 @@ async function save() {
             />
           </UFormField>
         </UForm>
-        <div>
-          Игроков: {{ state.playerCount }}
-        </div>
-        <div>
-          Рассадка: {{ settings.random ? 'Случайная' : 'Фиксированная' }}
-        </div>
-        <div
-          v-if="state.playerCount === '3'"
-        >
-          Игрок отсутствует на {{ state.emptyPlace }} {{ state.emptyPlace === Place.EAST ? 'востоке' : state.emptyPlace === Place.SOUTH ? 'юге' : settings.emptyPlace === Place.WEST ? 'западе' : settings.emptyPlace === Place.NORTH ? 'севере' : '' }}
-        </div>
+        <ErrorList :errors="errors" />
       </div>
     </template>
     <template #footer>
@@ -140,8 +134,9 @@ async function save() {
           @click="emit('close', null)"
         />
         <UButton
-          type="submit"
           label="Применить"
+          :disabled="errors.length > 0"
+          @click="save()"
         />
       </div>
     </template>

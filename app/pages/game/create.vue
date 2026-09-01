@@ -41,12 +41,12 @@ onMounted(async () => {
       Рассадка: {{ settings.random ? 'Случайная' : 'Фиксированная' }}
     </div>
     <div>
-      Колличество сдач: {{ settings.gameLimit }}
+      Количество сдач: {{ settings.gameLimit }}
     </div>
     <div
       v-if="settings.playerCount === 3"
     >
-      Игрок отсутсвует на {{ settings.emptyPlace === Place.EAST ? 'востоке' : settings.emptyPlace === Place.SOUTH ? 'юге' : settings.emptyPlace === Place.WEST ? 'западе' : settings.emptyPlace === Place.NORTH ? 'севере' : '' }}
+      Игрок отсутствует на {{ settings.emptyPlace === Place.SOUTH ? 'юге' : settings.emptyPlace === Place.WEST ? 'западе' : settings.emptyPlace === Place.NORTH ? 'севере' : '' }}
     </div>
   </UContainer>
 </template>>
