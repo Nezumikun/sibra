@@ -52,8 +52,6 @@ function validate(data: Partial<stateInterface>): FormError[] {
   else if (state.value.playerCount === '3' && state.value.emptyPlace == null) {
     errors.value.push('Необходимо указать на каком месте нет игрока')
   }
-  // if (!state.password) errors.push({ name: 'password', message: 'Required' })
-  console.log(errors.value)
   return []
 }
 
