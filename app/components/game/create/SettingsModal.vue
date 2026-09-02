@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { FormError, FormSubmitEvent, RadioGroupItem } from '@nuxt/ui'
-import ErrorList from '~/components/common/ErrorList.vue';
+import type { FormError, RadioGroupItem } from '@nuxt/ui'
+import ErrorList from '~/components/common/ErrorList.vue'
 import type { GameCreateSettings } from '~/types/GameCreateSettings'
 import type { Nullable } from '~/types/Nullable'
+import { SibraError } from '~/types/SibraError'
 import { Place } from '~~/generated/prisma/enums'
 
 const props = defineProps<{
@@ -25,8 +26,7 @@ const placeItems = ref<RadioGroupItem[]>([
     value: 'NORTH'
   }
 ])
-const errors = ref<string[]>([])
-
+const errors = ref<SibraError[]>([])
 
 const emit = defineEmits<{ close: [Nullable<GameCreateSettings>] }>()
 
@@ -44,13 +44,12 @@ const state = ref<stateInterface>({
   emptyPlace: props.settings.emptyPlace ? props.settings.emptyPlace.toString() : null
 })
 
-function validate(data: Partial<stateInterface>): FormError[] {
+function validate(_data: Partial<stateInterface>): FormError[] {
   errors.value = []
   if (state.value.playerCount === '4') {
     state.value.emptyPlace = null
-  }
-  else if (state.value.playerCount === '3' && state.value.emptyPlace == null) {
-    errors.value.push('Необходимо указать на каком месте нет игрока')
+  } else if (state.value.playerCount === '3' && state.value.emptyPlace == null) {
+    errors.value.push(new SibraError('Необходимо указать на каком месте нет игрока'))
   }
   return []
 }
