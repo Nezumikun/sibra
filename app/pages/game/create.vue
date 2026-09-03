@@ -19,9 +19,12 @@ async function open() {
     settings: settings.value
   })
 
-  const settingsReult = await instance.result
-  if (settingsReult) {
-    settings.value = settingsReult
+  const settingsResult = await instance.result
+  if (settingsResult) {
+    settings.value = settingsResult
+  } else {
+    await navigateTo('/welcome')
+    return
   }
 }
 onMounted(async () => {
