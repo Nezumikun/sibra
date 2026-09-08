@@ -1,4 +1,4 @@
-import type { EnumWind } from './EnumPlace'
+import type { EnumWind } from './EnumWind'
 import type { Nullable } from './Nullable'
 import type { PlayerInList } from './PlayerInList'
 
