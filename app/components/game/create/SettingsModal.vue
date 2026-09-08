@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { FormError, RadioGroupItem } from '@nuxt/ui'
 import ErrorList from '~/components/common/ErrorList.vue'
+import { EnumWind } from '~/types/EnumWind'
 import type { GameCreateSettings } from '~/types/GameCreateSettings'
 import type { Nullable } from '~/types/Nullable'
 import { SibraError } from '~/types/SibraError'
-import { Place } from '~~/generated/prisma/enums'
 
 const props = defineProps<{
   settings: GameCreateSettings
@@ -15,15 +15,15 @@ const gameCountItems = ref(['1', '4', '8', '10', '16'])
 const placeItems = ref<RadioGroupItem[]>([
   {
     label: '南 Юг',
-    value: 'SOUTH'
+    value: EnumWind.SOUTH
   },
   {
     label: '西 Запад',
-    value: 'WEST'
+    value: EnumWind.WEST
   },
   {
     label: '北 Север',
-    value: 'NORTH'
+    value: EnumWind.NORTH
   }
 ])
 const errors = ref<SibraError[]>([])
@@ -34,14 +34,14 @@ interface stateInterface {
   playerCount: string
   random: boolean
   gameLimit: string
-  emptyPlace: string | null
+  emptyPlace: EnumWind | null
 }
 
 const state = ref<stateInterface>({
   playerCount: props.settings.playerCount.toString(),
   random: props.settings.random,
   gameLimit: props.settings.gameLimit.toString(),
-  emptyPlace: props.settings.emptyPlace ? props.settings.emptyPlace.toString() : null
+  emptyPlace: props.settings.emptyPlace
 })
 
 function validate(_data: Partial<stateInterface>): FormError[] {
@@ -59,7 +59,7 @@ async function save() {
     playerCount: state.value.playerCount === '3' ? 3 : 4,
     gameLimit: state.value.gameLimit === '16' ? 16 : state.value.gameLimit === '10' ? 10 : state.value.gameLimit === '8' ? 8 : state.value.gameLimit === '4' ? 4 : 1,
     random: state.value.random!,
-    emptyPlace: state.value.playerCount === '4' ? null : state.value.emptyPlace === 'SOUTH' ? Place.SOUTH : state.value.emptyPlace === 'WEST' ? Place.WEST : state.value.emptyPlace === 'NORTH' ? Place.NORTH : null
+    emptyPlace: state.value.playerCount === '4' ? null : state.value.emptyPlace
   }
   // console.log('save ', value)
   emit('close', value)

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { LazyGameCreateSettingsModal, LazyCommonSelectPlayerModal } from '#components'
+import { EnumWind } from '~/types/EnumWind'
 import type { GameCreateData } from '~/types/GameCreateData'
 import type { PlayerInList } from '~/types/PlayerInList'
-import { Place } from '~~/generated/prisma/enums'
 
 enum EnumStage {
   SETTINGS,
@@ -52,31 +52,56 @@ async function openSettings() {
   }
 }
 
-async function openSelectPLayer() {
-  const modalPlayer = overlay.create(LazyCommonSelectPlayerModal)
-  const instanceSelectPLayer = modalPlayer.open({
-    place: '#' + (data.value.players.length + 1),
-    players: players
-  })
+const playerPlace = ref<string>('')
 
-  const playerResult = await instanceSelectPLayer.result
-  if (playerResult) {
-    console.log(playerResult)
-    const player = players.find(player => player.id === playerResult)
-    if (player) {
-      data.value.players.push({
-        player: player,
-        wind: null
-      })
-      stage.value = stage.value === EnumStage.PLAYER_EAST ? EnumStage.PLAYER_SOUTH : stage.value === EnumStage.PLAYER_SOUTH ? EnumStage.PLAYER_WEST : stage.value === EnumStage.PLAYER_WEST ? EnumStage.PLAYER_NORTH : EnumStage.FINISH
+async function openSelectPLayer() {
+  if (!(data.value.settings.playerCount === 3
+    && (data.value.settings.emptyPlace === EnumWind.SOUTH && stage.value === EnumStage.PLAYER_SOUTH)
+  )) {
+    const modalPlayer = overlay.create(LazyCommonSelectPlayerModal)
+    playerPlace.value = data.value.settings.random
+      ? '#' + (data.value.players.length + 1)
+      : stage.value === EnumStage.PLAYER_EAST
+        ? 'на востоке'
+        : stage.value === EnumStage.PLAYER_SOUTH
+          ? 'на юге'
+          : stage.value === EnumStage.PLAYER_WEST
+            ? 'на западе'
+            : stage.value === EnumStage.PLAYER_NORTH
+              ? 'на севере'
+              : ''
+    const playersInGame = data.value.players.map(x => x.player.id)
+    const instanceSelectPLayer = modalPlayer.open({
+      place: playerPlace.value,
+      players: players.filter(x => !playersInGame.includes(x.id))
+    })
+
+    const playerResult = await instanceSelectPLayer.result
+    if (playerResult) {
+      const player = players.find(player => player.id === playerResult)
+      if (player) {
+        data.value.players.push({
+          player: player,
+          wind: data.value.settings.random
+            ? null
+            : stage.value === EnumStage.PLAYER_EAST
+              ? EnumWind.EAST
+              : stage.value === EnumStage.PLAYER_SOUTH
+                ? EnumWind.SOUTH
+                : stage.value === EnumStage.PLAYER_WEST
+                  ? EnumWind.WEST
+                  : EnumWind.NORTH
+        })
+      }
+    } else {
+      stage.value = stage.value === EnumStage.PLAYER_EAST ? EnumStage.SETTINGS : stage.value === EnumStage.PLAYER_SOUTH ? EnumStage.PLAYER_EAST : stage.value === EnumStage.PLAYER_WEST ? EnumStage.PLAYER_SOUTH : EnumStage.PLAYER_WEST
+      return
     }
-  } else {
-    stage.value = stage.value === EnumStage.PLAYER_EAST ? EnumStage.SETTINGS : stage.value === EnumStage.PLAYER_SOUTH ? EnumStage.PLAYER_EAST : stage.value === EnumStage.PLAYER_WEST ? EnumStage.PLAYER_SOUTH : EnumStage.PLAYER_WEST
   }
+  stage.value = stage.value === EnumStage.PLAYER_EAST ? EnumStage.PLAYER_SOUTH : stage.value === EnumStage.PLAYER_SOUTH ? EnumStage.PLAYER_WEST : stage.value === EnumStage.PLAYER_WEST ? EnumStage.PLAYER_NORTH : EnumStage.FINISH
 }
 
 async function showStage() {
-  console.log(stage.value)
   if (stage.value === EnumStage.SETTINGS) {
     await openSettings()
   } else {
@@ -84,10 +109,36 @@ async function showStage() {
   }
 }
 
+const GoAway = ref<boolean>(false)
+
+function fisherYatesShuffle(arr: EnumWind[]): EnumWind[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j: number = (Math.floor(Math.random() * (i + 1)));
+    [arr[i], arr[j]] = [arr[j]!, arr[i]!]
+  }
+  return arr
+}
+function shuffleWinds() {
+  const winds: EnumWind[] = [EnumWind.EAST]
+  if (data.value.settings.emptyPlace !== EnumWind.SOUTH) winds.push(EnumWind.SOUTH)
+  if (data.value.settings.emptyPlace !== EnumWind.WEST) winds.push(EnumWind.WEST)
+  if (data.value.settings.emptyPlace !== EnumWind.NORTH) winds.push(EnumWind.NORTH)
+  return fisherYatesShuffle(winds)
+}
+
 onMounted(async () => {
   while (stage.value !== EnumStage.FINISH) {
+    if (GoAway.value) return
     await showStage()
   }
+  console.log(data.value)
+  if (data.value.settings.random) {
+    const winds = shuffleWinds()
+    console.log(winds)
+  }
+})
+onUnmounted(async () => {
+  GoAway.value = true
 })
 </script>
 
@@ -96,19 +147,27 @@ onMounted(async () => {
     <h1 class="font-bold text-xl py-4">
       Новая игра
     </h1>
-    <div>
-      Игроков: {{ data.settings.playerCount }}
-    </div>
-    <div>
-      Рассадка: {{ data.settings.random ? 'Случайная' : 'Фиксированная' }}
-    </div>
-    <div>
-      Количество сдач: {{ data.settings.gameLimit }}
+    <div v-if="stage !== EnumStage.SETTINGS">
+      <div>
+        Игроков: {{ data.settings.playerCount }}
+      </div>
+      <div>
+        Рассадка: {{ data.settings.random ? 'Случайная' : 'Фиксированная' }}
+      </div>
+      <div>
+        Количество сдач: {{ data.settings.gameLimit }}
+      </div>
+      <div
+        v-if="data.settings.playerCount === 3"
+      >
+        Игрок отсутствует на {{ data.settings.emptyPlace === EnumWind.SOUTH ? 'юге' : data.settings.emptyPlace === EnumWind.WEST ? 'западе' : data.settings.emptyPlace === EnumWind.NORTH ? 'севере' : '' }}
+      </div>
     </div>
     <div
-      v-if="data.settings.playerCount === 3"
+      v-if="stage !== EnumStage.FINISH"
+      class="pt-4"
     >
-      Игрок отсутствует на {{ data.settings.emptyPlace === Place.SOUTH ? 'юге' : data.settings.emptyPlace === Place.WEST ? 'западе' : data.settings.emptyPlace === Place.NORTH ? 'севере' : '' }}
+      Этап: {{ stage === EnumStage.SETTINGS ? 'Основные настройки' : ('Выбор игрока ' + playerPlace) }}
     </div>
   </UContainer>
 </template>>
