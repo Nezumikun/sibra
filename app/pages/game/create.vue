@@ -3,6 +3,7 @@ import { LazyGameCreateSettingsModal, LazyCommonSelectPlayerModal } from '#compo
 import { EnumWind } from '~/types/EnumWind'
 import type { GameCreateData } from '~/types/GameCreateData'
 import type { PlayerInList } from '~/types/PlayerInList'
+import type { PlayerOnWind } from '~/types/PlayerOnWind'
 
 enum EnumStage {
   SETTINGS,
@@ -134,7 +135,17 @@ onMounted(async () => {
   console.log(data.value)
   if (data.value.settings.random) {
     const winds = shuffleWinds()
-    console.log(winds)
+    const newPlayerList: PlayerOnWind[] = []
+    for (const player of data.value.players) {
+      const wind = winds.shift()
+      if (wind !== undefined) {
+        newPlayerList.push({
+          player: player.player,
+          wind: wind
+        })
+      }
+    }
+    data.value.players = newPlayerList.sort((a, b) => a.wind! - b.wind!)
   }
 })
 onUnmounted(async () => {
@@ -161,6 +172,17 @@ onUnmounted(async () => {
         v-if="data.settings.playerCount === 3"
       >
         Игрок отсутствует на {{ data.settings.emptyPlace === EnumWind.SOUTH ? 'юге' : data.settings.emptyPlace === EnumWind.WEST ? 'западе' : data.settings.emptyPlace === EnumWind.NORTH ? 'севере' : '' }}
+      </div>
+    </div>
+    <div
+      v-if="stage === EnumStage.FINISH"
+      class="pt-4"
+    >
+      <div
+        v-for="player in data.players"
+        :key="player.player.id"
+      >
+        {{ EnumWindToString(player.wind!) }}: {{ player.player.label }}
       </div>
     </div>
     <div
