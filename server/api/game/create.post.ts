@@ -19,6 +19,7 @@ export default defineEventHandler(async (event) => {
       data: {
         createdById: session.user.id,
         roundLimit: gameParams.roundLimit,
+        playersCount: 4,
         players: {
           create: [
             {

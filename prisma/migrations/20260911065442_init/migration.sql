@@ -2,7 +2,7 @@
 CREATE TYPE "Role" AS ENUM ('PLAYER', 'ADMIN');
 
 -- CreateEnum
-CREATE TYPE "Place" AS ENUM ('EAST', 'SOUTH', 'WEST', 'NORTH');
+CREATE TYPE "Wind" AS ENUM ('EAST', 'SOUTH', 'WEST', 'NORTH');
 
 -- CreateTable
 CREATE TABLE "Player" (
@@ -25,8 +25,10 @@ CREATE TABLE "Game" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "createdById" INTEGER NOT NULL,
     "finished" BOOLEAN NOT NULL DEFAULT false,
+    "aborted" BOOLEAN NOT NULL DEFAULT false,
     "finishedAt" TIMESTAMP(3),
     "roundLimit" INTEGER NOT NULL,
+    "playersCount" INTEGER NOT NULL,
 
     CONSTRAINT "Game_pkey" PRIMARY KEY ("id")
 );
@@ -36,7 +38,7 @@ CREATE TABLE "GamePlayer" (
     "id" SERIAL NOT NULL,
     "gameId" INTEGER NOT NULL,
     "playerId" INTEGER NOT NULL,
-    "initialPlace" "Place" NOT NULL,
+    "initialPlace" "Wind" NOT NULL,
 
     CONSTRAINT "GamePlayer_pkey" PRIMARY KEY ("id")
 );
