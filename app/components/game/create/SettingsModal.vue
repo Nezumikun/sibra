@@ -35,9 +35,9 @@ interface stateInterface {
 }
 
 const state = ref<stateInterface>({
-  playerCount: props.settings.playerCount.toString(),
+  playerCount: props.settings.playersCount.toString(),
   random: props.settings.random,
-  gameLimit: props.settings.gameLimit.toString(),
+  gameLimit: props.settings.roundLimit.toString(),
   emptyPlace: props.settings.emptyPlace
 })
 
@@ -53,8 +53,8 @@ function validate(_data: Partial<stateInterface>): FormError[] {
 
 async function save() {
   const value: GameCreateSettings = {
-    playerCount: state.value.playerCount === '3' ? 3 : 4,
-    gameLimit: state.value.gameLimit === '16' ? 16 : state.value.gameLimit === '10' ? 10 : state.value.gameLimit === '8' ? 8 : state.value.gameLimit === '4' ? 4 : 1,
+    playersCount: state.value.playerCount === '3' ? 3 : 4,
+    roundLimit: state.value.gameLimit === '16' ? 16 : state.value.gameLimit === '10' ? 10 : state.value.gameLimit === '8' ? 8 : state.value.gameLimit === '4' ? 4 : 1,
     random: state.value.random!,
     emptyPlace: state.value.playerCount === '4' ? null : state.value.emptyPlace
   }

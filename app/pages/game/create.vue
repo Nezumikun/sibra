@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { LazyGameCreateSettingsModal, LazyCommonSelectPlayerModal } from '#components'
+import ErrorList from '~/components/common/ErrorList.vue'
+import { SibraError } from '~/types/SibraError'
+import type { FetchError } from 'ofetch'
 
 enum EnumStage {
   SETTINGS,
@@ -13,8 +16,8 @@ enum EnumStage {
 const stage = ref<EnumStage>(EnumStage.SETTINGS)
 const data = ref<GameCreateData>({
   settings: {
-    playerCount: 4,
-    gameLimit: 10,
+    playersCount: 4,
+    roundLimit: 10,
     emptyPlace: null,
     random: false
   },
@@ -52,7 +55,7 @@ async function openSettings() {
 const playerPlace = ref<string>('')
 
 async function openSelectPLayer() {
-  if (!(data.value.settings.playerCount === 3
+  if (!(data.value.settings.playersCount === 3
     && (data.value.settings.emptyPlace === EnumWind.SOUTH && stage.value === EnumStage.PLAYER_SOUTH)
   )) {
     const modalPlayer = overlay.create(LazyCommonSelectPlayerModal)
@@ -147,6 +150,21 @@ onMounted(async () => {
 onUnmounted(async () => {
   GoAway.value = true
 })
+
+const errors = ref<SibraError[]>([])
+
+async function save() {
+  try {
+    errors.value = []
+    await $fetch('/api/game/create', {
+      method: 'POST',
+      body: data.value
+    })
+    await navigateTo('/game/current')
+  } catch (ex) {
+    errors.value.push(new SibraError((ex as FetchError).data.message))
+  }
+}
 </script>
 
 <template>
@@ -156,16 +174,16 @@ onUnmounted(async () => {
     </h1>
     <div v-if="stage !== EnumStage.SETTINGS">
       <div>
-        Игроков: {{ data.settings.playerCount }}
+        Игроков: {{ data.settings.playersCount }}
       </div>
       <div>
         Рассадка: {{ data.settings.random ? 'Случайная' : 'Фиксированная' }}
       </div>
       <div>
-        Количество сдач: {{ data.settings.gameLimit }}
+        Количество сдач: {{ data.settings.roundLimit }}
       </div>
       <div
-        v-if="data.settings.playerCount === 3"
+        v-if="data.settings.playersCount === 3"
       >
         Игрок отсутствует на {{ data.settings.emptyPlace === EnumWind.SOUTH ? 'юге' : data.settings.emptyPlace === EnumWind.WEST ? 'западе' : data.settings.emptyPlace === EnumWind.NORTH ? 'севере' : '' }}
       </div>
@@ -180,6 +198,15 @@ onUnmounted(async () => {
       >
         {{ EnumWindToString(player.wind!) }}: {{ player.player.label }}
       </div>
+      <div class="pt-4">
+        <UButton
+          class="w-full md:w-auto"
+          @click="save()"
+        >
+          Начать игру
+        </UButton>
+      </div>
+      <ErrorList :errors="errors" />
     </div>
     <div
       v-if="stage !== EnumStage.FINISH"
