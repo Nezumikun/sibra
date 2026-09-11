@@ -1,9 +1,5 @@
 <script setup lang="ts">
 import { LazyGameCreateSettingsModal, LazyCommonSelectPlayerModal } from '#components'
-import { EnumWind } from '~/types/EnumWind'
-import type { GameCreateData } from '~/types/GameCreateData'
-import type { PlayerInList } from '~/types/PlayerInList'
-import type { PlayerOnWind } from '~/types/PlayerOnWind'
 
 enum EnumStage {
   SETTINGS,

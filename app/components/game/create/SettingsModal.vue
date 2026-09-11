@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import type { FormError, RadioGroupItem } from '@nuxt/ui'
 import ErrorList from '~/components/common/ErrorList.vue'
-import { EnumWind } from '~/types/EnumWind'
-import type { GameCreateSettings } from '~/types/GameCreateSettings'
-import type { Nullable } from '~/types/Nullable'
 import { SibraError } from '~/types/SibraError'
 
 const props = defineProps<{

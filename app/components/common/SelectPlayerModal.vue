@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { FormError } from '@nuxt/ui'
 import ErrorList from '~/components/common/ErrorList.vue'
-import type { PlayerInList } from '~/types/PlayerInList'
 import { SibraError } from '~/types/SibraError'
 
 defineProps<{
