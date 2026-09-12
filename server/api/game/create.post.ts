@@ -1,6 +1,6 @@
 // import { number, z } from 'zod'
 // import { Wind } from '~~/generated/prisma/enums'
-import EnumWindToWind from '~~/server/utils/EnumWindToWind'
+import BeginGame from '~~/server/utils/game/BeginGame'
 // import type { GameCreateData } from '~~/shared/types/GameCreateData'
 // import { GameCreateSettings } from '~~/shared/types/GameCreateSettings'
 
@@ -29,16 +29,7 @@ export default defineEventHandler(async (event) => {
   const gameParams = await readBody(event) as GameCreateData
 
   if (session.user) {
-    const game = await prisma.game.create({
-      data: {
-        createdById: session.user.id,
-        roundLimit: gameParams.settings.roundLimit,
-        playersCount: gameParams.settings.playersCount,
-        players: {
-          create: gameParams.players.filter(x => x.wind !== null).map(x => ({ playerId: x.player.id, initialPlace: EnumWindToWind(x.wind!) }))
-        }
-      }
-    })
+    const game = await BeginGame(gameParams, session.user.id)
     session.currentGame = game
     await setUserSession(event, session)
   }

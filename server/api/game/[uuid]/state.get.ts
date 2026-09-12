@@ -12,9 +12,15 @@ export default defineEventHandler(async (event) => {
           include: {
             player: {
               select: {
-                fullName: true
+                fullName: true,
+                name: true
               }
             }
+          }
+        },
+        rounds: {
+          include: {
+            events: true
           }
         }
       },

@@ -1,25 +1,55 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import type { FetchError } from 'ofetch'
+import { SibraError } from '~/types/SibraError'
+import ErrorList from '~/components/common/ErrorList.vue'
+import type { Prisma } from '~~/generated/prisma/client'
+import EventsList from '~/components/game/play/EventsList.vue'
 
-const { loggedIn, session } = useUserSession()
+const { loggedIn } = useUserSession()
 const route = useRoute()
-const data = ref({
-  errorMessage: ''
-})
+const errors = ref<SibraError[]>([])
+const game = ref<GameWithIncludes>()
+const players = ref<PlayerInList[]>([])
+
+const _gameWithIncludesArgs = {
+  include: {
+    players: {
+      include: {
+        player: {
+          select: {
+            fullName: true,
+            name: true
+          }
+        }
+      }
+    },
+    rounds: {
+      include: {
+        events: true
+      }
+    }
+  }
+} satisfies Prisma.GameDefaultArgs
+
+type GameWithIncludes = Prisma.GameGetPayload<typeof _gameWithIncludesArgs>
 
 async function Update() {
-  data.value.errorMessage = ''
+  errors.value = []
   if (loggedIn.value) {
     try {
-      const game = await $fetch(`/api/game/${route.params.uuid}/state`)
-      console.log(game)
+      const state = await $fetch<GameWithIncludes>(`/api/game/${route.params.uuid}/state`)
+      console.log(state)
+      game.value = state
+      players.value = state.players.map(x => ({
+        id: x.playerId,
+        label: x.player.fullName + ' [' + x.player.name + ']'
+      }))
     } catch (ex) {
       const error = (ex as FetchError).data
-      data.value.errorMessage = error.message
+      errors.value.push(new SibraError(error.message))
     }
   } else {
-    console.log('Goto /')
     await navigateTo('/')
   }
 }
@@ -29,17 +59,23 @@ Update()
 
 <template>
   <div>
-    <UAlert
-      v-if="data.errorMessage != ''"
-      color="error"
-      title="Ошибка"
-      :description="data.errorMessage"
-    />
     <div
-      v-if="loggedIn"
-      class="text-center"
+      v-if="loggedIn && game"
+      class=""
     >
-      {{ session?.currentGame.uuid }}
+      <div
+        v-for="round in game.rounds.sort((a, b) => a.number - b.number)"
+        :key="round.id"
+      >
+        <div class="font-bold">
+          Раунд #{{ round.number }}
+        </div>
+        <EventsList
+          :events="round.events"
+          :players="players"
+        />
+      </div>
     </div>
+    <ErrorList :errors="errors" />
   </div>
 </template>>

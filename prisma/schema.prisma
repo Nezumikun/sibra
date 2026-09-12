@@ -49,15 +49,56 @@ model Game {
   roundLimit   Int
   playersCount Int
   players      GamePlayer[]
+  rounds       GameRound[]
 }
 
 model GamePlayer {
-  id           Int    @id @default(autoincrement())
+  id           Int          @id @default(autoincrement())
   gameId       Int
-  game         Game   @relation(fields: [gameId], references: [id])
+  game         Game         @relation(fields: [gameId], references: [id])
   playerId     Int
-  player       Player @relation(fields: [playerId], references: [id])
+  player       Player       @relation(fields: [playerId], references: [id])
   initialPlace Wind
+  rounds       GameRound[]
+  events       RoundEvent[] @relation("createdBy")
+  victim       RoundEvent[] @relation("victim")
 
   @@unique([gameId, initialPlace])
+}
+
+model GameRound {
+  id          Int          @id @default(autoincrement())
+  gameId      Int
+  game        Game         @relation(fields: [gameId], references: [id])
+  number      Int
+  createdById Int
+  createdBy   GamePlayer   @relation(fields: [createdById], references: [id])
+  createdAt   DateTime     @default(now())
+  finishedAt  DateTime?
+  events      RoundEvent[]
+}
+
+enum RoundEventType {
+  START
+  KONG
+  MAHJONG
+  MAHJONG_AFTER_KONG
+  END_OF_WALL
+  TENPAI
+  NOTEN
+  FINISH
+  FAKE_MAHJONG
+  PENALTY
+}
+
+model RoundEvent {
+  id             Int            @id @default(autoincrement())
+  gameRoundId    Int
+  gameRound      GameRound      @relation(fields: [gameRoundId], references: [id])
+  createdAt      DateTime       @default(now())
+  createdById    Int
+  createdBy      GamePlayer     @relation("createdBy", fields: [createdById], references: [id])
+  type           RoundEventType
+  victimPlayerId Int?
+  victimPlayer   GamePlayer?    @relation("victim", fields: [victimPlayerId], references: [id])
 }
