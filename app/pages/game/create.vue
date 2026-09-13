@@ -200,7 +200,7 @@ async function save() {
       </div>
       <div class="pt-4">
         <UButton
-          class="w-full md:w-auto"
+          color="neutral"
           @click="save()"
         >
           Начать игру
