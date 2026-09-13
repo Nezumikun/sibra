@@ -5,6 +5,7 @@ import { SibraError } from '~/types/SibraError'
 import ErrorList from '~/components/common/ErrorList.vue'
 import type { Prisma } from '~~/generated/prisma/client'
 import EventsList from '~/components/game/play/EventsList.vue'
+import { LazyGamePlayKongModal } from '#components'
 
 const { loggedIn } = useUserSession()
 const route = useRoute()
@@ -54,6 +55,21 @@ async function Update() {
   }
 }
 
+const overlay = useOverlay()
+
+const modalKong = overlay.create(LazyGamePlayKongModal)
+
+async function kong() {
+  const instanceKong = modalKong.open({
+    players: players.value
+  })
+
+  const kongResult = await instanceKong.result
+  if (kongResult) {
+    console.log('kongResult', kongResult)
+  }
+}
+
 Update()
 </script>
 
@@ -69,6 +85,27 @@ Update()
       >
         <div class="font-bold">
           Раунд #{{ round.number }}
+        </div>
+        <div
+          v-if="!game.finished"
+          class="flex flex-col gap-2 sm:flex-row pt-4"
+        >
+          <UButton
+            color="neutral"
+          >
+            Маджонг
+          </UButton>
+          <UButton
+            color="neutral"
+            @click="kong"
+          >
+            Конг
+          </UButton>
+          <UButton
+            color="neutral"
+          >
+            Стена закончилась
+          </UButton>
         </div>
         <EventsList
           :events="round.events"
