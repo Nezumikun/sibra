@@ -5,6 +5,7 @@ import Event from './Event.vue'
 const props = defineProps<{
   events: RoundEvent[]
   players: PlayerInList[]
+  allowDelete: boolean
 }>()
 
 const sortedEvents = computed(() => [...props.events].sort((a, b) => b.id - a.id))
@@ -19,6 +20,7 @@ const sortedEvents = computed(() => [...props.events].sort((a, b) => b.id - a.id
         :event="event"
         :index="index"
         :players="players"
+        :allow-delete="allowDelete"
       />
     </ul>
   </div>

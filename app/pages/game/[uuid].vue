@@ -8,7 +8,7 @@ import EventsList from '~/components/game/play/EventsList.vue'
 import { LazyGamePlayKongModal } from '#components'
 import type { GamePlayEvent } from '~~/shared/types/GamePlayEvent'
 
-const { loggedIn } = useUserSession()
+const { loggedIn, session } = useUserSession()
 const route = useRoute()
 
 const _gameWithIncludesArgs = {
@@ -141,6 +141,7 @@ update()
           <EventsList
             :events="round.events"
             :players="players"
+            :allow-delete="session?.user?.id === game.createdById"
           />
         </div>
       </div>
