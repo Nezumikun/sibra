@@ -17,6 +17,14 @@ function getPlayerNameById(id: number) {
   }
 }
 
+const emit = defineEmits<{
+  deleteEvent: [id: number]
+}>()
+
+async function deleteEvent(id: number) {
+  emit('deleteEvent', id)
+}
+
 const playerName = getPlayerNameById(props.event.createdById)
 const victimName = props.event.victimPlayerId === null ? '' : getPlayerNameById(props.event.victimPlayerId)
 </script>
@@ -44,6 +52,7 @@ const victimName = props.event.victimPlayerId === null ? '' : getPlayerNameById(
           variant="outline"
           color="neutral"
           icon="i-lucide-trash-2"
+          @click="deleteEvent(event.id)"
         />
       </div>
     </div>

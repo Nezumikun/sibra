@@ -8,6 +8,14 @@ const props = defineProps<{
   allowDelete: boolean
 }>()
 
+const emit = defineEmits<{
+  deleteEvent: [id: number]
+}>()
+
+async function deleteEvent(id: number) {
+  emit('deleteEvent', id)
+}
+
 const sortedEvents = computed(() => [...props.events].sort((a, b) => b.id - a.id))
 </script>
 
@@ -20,7 +28,8 @@ const sortedEvents = computed(() => [...props.events].sort((a, b) => b.id - a.id
         :event="event"
         :index="index"
         :players="players"
-        :allow-delete="allowDelete"
+        :allow-delete="allowDelete && index === 0"
+        @delete-event="deleteEvent"
       />
     </ul>
   </div>

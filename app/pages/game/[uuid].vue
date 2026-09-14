@@ -44,7 +44,6 @@ async function update() {
   if (loggedIn.value) {
     try {
       const state = await $fetch<GameWithIncludes>(`/api/game/${route.params.uuid}/state`)
-      console.log(state)
       game.value = state
       players.value = state.players.map(x => ({
         id: x.playerId,
@@ -84,13 +83,24 @@ async function kong() {
 
   const kongResult = await instanceKong.result
   if (kongResult) {
-    console.log('kongResult', kongResult)
     const data: GamePlayEvent = {
       type: 'KONG',
       player: kongResult.player,
       victim: kongResult.victim
     }
     save(data)
+  }
+}
+
+async function deleteEvent(id: number) {
+  try {
+    errors.value = []
+    await $fetch(`/api/game/${game.value?.uuid}/event/${id}`, {
+      method: 'DELETE'
+    })
+    await update()
+  } catch (ex) {
+    errors.value.push(new SibraError((ex as FetchError).data.message))
   }
 }
 
@@ -142,6 +152,7 @@ update()
             :events="round.events"
             :players="players"
             :allow-delete="session?.user?.id === game.createdById"
+            @delete-event="deleteEvent"
           />
         </div>
       </div>
