@@ -1,3 +1,5 @@
+import type { Game } from '~~/generated/prisma/client'
+
 declare module '#auth-utils' {
   interface User {
     id: number

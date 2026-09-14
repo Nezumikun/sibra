@@ -6,12 +6,10 @@ import ErrorList from '~/components/common/ErrorList.vue'
 import type { Prisma } from '~~/generated/prisma/client'
 import EventsList from '~/components/game/play/EventsList.vue'
 import { LazyGamePlayKongModal } from '#components'
+import type { GamePlayEvent } from '~~/shared/types/GamePlayEvent'
 
 const { loggedIn } = useUserSession()
 const route = useRoute()
-const errors = ref<SibraError[]>([])
-const game = ref<GameWithIncludes>()
-const players = ref<PlayerInList[]>([])
 
 const _gameWithIncludesArgs = {
   include: {
@@ -35,7 +33,13 @@ const _gameWithIncludesArgs = {
 
 type GameWithIncludes = Prisma.GameGetPayload<typeof _gameWithIncludesArgs>
 
-async function Update() {
+const errors = ref<SibraError[]>([])
+const game = ref<GameWithIncludes | null>(null)
+const players = ref<PlayerInList[]>([])
+const loading = ref<boolean>(false)
+
+async function update() {
+  loading.value = true
   errors.value = []
   if (loggedIn.value) {
     try {
@@ -50,8 +54,22 @@ async function Update() {
       const error = (ex as FetchError).data
       errors.value.push(new SibraError(error.message))
     }
+    loading.value = false
   } else {
     await navigateTo('/')
+  }
+}
+
+async function save(data: GamePlayEvent) {
+  try {
+    errors.value = []
+    await $fetch(`/api/game/${game.value?.uuid}/event`, {
+      method: 'POST',
+      body: data
+    })
+    await update()
+  } catch (ex) {
+    errors.value.push(new SibraError((ex as FetchError).data.message))
   }
 }
 
@@ -67,10 +85,16 @@ async function kong() {
   const kongResult = await instanceKong.result
   if (kongResult) {
     console.log('kongResult', kongResult)
+    const data: GamePlayEvent = {
+      type: 'KONG',
+      player: kongResult.player,
+      victim: kongResult.victim
+    }
+    save(data)
   }
 }
 
-Update()
+update()
 </script>
 
 <template>
@@ -88,29 +112,37 @@ Update()
         </div>
         <div
           v-if="!game.finished"
-          class="flex flex-col gap-2 sm:flex-row pt-4"
         >
-          <UButton
-            color="neutral"
+          <div
+            v-if="loading"
           >
-            Маджонг
-          </UButton>
-          <UButton
-            color="neutral"
-            @click="kong"
+            Идёт обновление данных...
+          </div>
+          <div
+            class="flex flex-col gap-2 sm:flex-row pt-4"
           >
-            Конг
-          </UButton>
-          <UButton
-            color="neutral"
-          >
-            Стена закончилась
-          </UButton>
+            <UButton
+              color="neutral"
+            >
+              Маджонг
+            </UButton>
+            <UButton
+              color="neutral"
+              @click="kong"
+            >
+              Конг
+            </UButton>
+            <UButton
+              color="neutral"
+            >
+              Стена закончилась
+            </UButton>
+          </div>
+          <EventsList
+            :events="round.events"
+            :players="players"
+          />
         </div>
-        <EventsList
-          :events="round.events"
-          :players="players"
-        />
       </div>
     </div>
     <ErrorList :errors="errors" />

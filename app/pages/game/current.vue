@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 const { loggedIn, session, fetch } = useUserSession()
 
-if (loggedIn) {
+if (loggedIn && session.value && session.value.currentGame) {
   await fetch()
-  navigateTo(`/game/${session.value?.currentGame.uuid}`)
+  navigateTo(`/game/${session.value.currentGame.uuid}`)
 } else {
   navigateTo('/')
 }

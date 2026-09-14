@@ -2,19 +2,22 @@
 import type { RoundEvent } from '~~/generated/prisma/client'
 import Event from './Event.vue'
 
-defineProps<{
+const props = defineProps<{
   events: RoundEvent[]
   players: PlayerInList[]
 }>()
+
+const sortedEvents = computed(() => [...props.events].sort((a, b) => b.id - a.id))
 </script>
 
 <template>
   <div class="pt-4">
     <ul>
       <Event
-        v-for="event in events"
+        v-for="(event, index) in sortedEvents"
         :key="event.id"
         :event="event"
+        :index="index"
         :players="players"
       />
     </ul>
