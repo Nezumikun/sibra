@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import type { RoundEvent } from '~~/generated/prisma/client'
 import Event from './Event.vue'
 
 const props = defineProps<{
-  events: RoundEvent[]
+  events: RoundEventWithIncludes[]
   players: PlayerInList[]
   allowDelete: boolean
 }>()

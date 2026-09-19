@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import type { RoundEvent } from '~~/generated/prisma/client'
-
 const props = defineProps<{
-  event: RoundEvent
+  event: RoundEventWithIncludes
   players: PlayerInList[]
   index: number
   allowDelete: boolean
@@ -35,14 +33,34 @@ const victimName = props.event.victimPlayerId === null ? '' : getPlayerNameById(
   >
     <div class="flex flex-row">
       <div class="flex flex-col grow">
-        <div class="font-bold">
-          {{ playerName }}
-        </div>
-        <div>
-          <span v-if="event.type === 'START'">Дилер</span>
-          <span v-else-if="event.type === 'KONG'">{{ event.victimPlayerId === event.createdById ? 'Доставленный конг' : event.victimPlayerId === null ? 'Конг со стены' : ('Конг с ' + victimName) }}</span>
-          <span v-else> Неизвестный тип события {{ JSON.stringify(event) }}</span>
-        </div>
+        <template
+          v-if="event.children.length > 0"
+        >
+          <div
+            v-for="child in event.children"
+            :key="child.id"
+            class="font-bold"
+          >
+            {{ getPlayerNameById(child.createdById) }}
+          </div>
+          <div>
+            <span v-if="event.type === 'DOUBLE_MAHJONG'">Двойной маджонг с {{ playerName }}</span>
+            <span v-else-if="event.type === 'TRIPLE_MAHJONG'">Тройной маджонг с {{ playerName }}</span>
+            <span v-else> Неизвестный тип события {{ JSON.stringify(event) }}</span>
+          </div>
+        </template>
+        <template
+          v-else
+        >
+          <div class="font-bold">
+            {{ playerName }}
+          </div>
+          <div>
+            <span v-if="event.type === 'START'">Дилер</span>
+            <span v-else-if="event.type === 'KONG'">{{ event.victimPlayerId === event.createdById ? 'Доставленный конг' : event.victimPlayerId === null ? 'Конг со стены' : ('Конг с ' + victimName) }}</span>
+            <span v-else> Неизвестный тип события {{ JSON.stringify(event) }}</span>
+          </div>
+        </template>
       </div>
       <div
         v-if="allowDelete"
