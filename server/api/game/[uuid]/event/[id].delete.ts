@@ -37,10 +37,17 @@ export default defineEventHandler(async (event) => {
       message: `Событие не найдено`
     })
   }
-  await prisma.roundEvent.delete({
-    where: {
-      id: eventId
-    }
+  await prisma.$transaction(async (tx) => {
+    await tx.roundEvent.deleteMany({
+      where: {
+        parentId: eventId
+      }
+    })
+    await tx.roundEvent.delete({
+      where: {
+        id: eventId
+      }
+    })
   })
   return {}
 })
