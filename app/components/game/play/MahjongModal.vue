@@ -55,7 +55,9 @@ function validate(_data: Partial<typeof state.value | undefined>): FormError[] {
     if ((state.value.winners.length > 1) && (state.value.victim === -1)) {
       state.value.victim = 0
     }
-    if (state.value.victim === 0) {
+    if (state.value.winners.length === props.players.length) {
+      errors.value.push(new SibraError('Все не могут объявить маджонг'))
+    } else if (state.value.victim === 0) {
       errors.value.push(new SibraError('Необходимо выбрать с кого взят конг'))
     }
   }
