@@ -66,7 +66,7 @@ export default defineEventHandler(async (event) => {
         }
       })
       for (const winner of data.winners) {
-        await prisma.roundEvent.create({
+        await tx.roundEvent.create({
           data: {
             gameRoundId: gameRound.id,
             parentId: parent.id,
