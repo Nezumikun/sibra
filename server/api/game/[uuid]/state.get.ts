@@ -1,29 +1,12 @@
+import { gameWithIncludesArgs } from '~~/shared/types/GameWithIncludes'
+
 export default defineEventHandler(async (event) => {
   const uuid = getRouterParam(event, 'uuid')
   const session = await getUserSession(event)
 
   if (session.user) {
     const game = await prisma.game.findUnique({
-      include: {
-        players: {
-          omit: {
-            gameId: true
-          },
-          include: {
-            player: {
-              select: {
-                fullName: true,
-                name: true
-              }
-            }
-          }
-        },
-        rounds: {
-          include: {
-            events: true
-          }
-        }
-      },
+      include: gameWithIncludesArgs,
       where: {
         uuid: uuid,
         OR: [

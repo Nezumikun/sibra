@@ -89,10 +89,15 @@ enum RoundEventType {
   FINISH
   FAKE_MAHJONG
   PENALTY
+  DOUBLE_MAHJONG
+  TRIPLE_MAHJONG
 }
 
 model RoundEvent {
   id             Int            @id @default(autoincrement())
+  parentId       Int?
+  parent         RoundEvent?    @relation("RoundEventHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children       RoundEvent[]   @relation("RoundEventHierarchy")
   gameRoundId    Int
   gameRound      GameRound      @relation(fields: [gameRoundId], references: [id])
   createdAt      DateTime       @default(now())

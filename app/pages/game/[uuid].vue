@@ -3,35 +3,12 @@ import { ref } from 'vue'
 import type { FetchError } from 'ofetch'
 import { SibraError } from '~/types/SibraError'
 import ErrorList from '~/components/common/ErrorList.vue'
-import type { Prisma } from '~~/generated/prisma/client'
 import EventsList from '~/components/game/play/EventsList.vue'
-import { LazyGamePlayKongModal } from '#components'
+import { LazyGamePlayKongModal, LazyGamePlayMahjongModal } from '#components'
 import type { GamePlayEvent } from '~~/shared/types/GamePlayEvent'
 
 const { loggedIn, session } = useUserSession()
 const route = useRoute()
-
-const _gameWithIncludesArgs = {
-  include: {
-    players: {
-      include: {
-        player: {
-          select: {
-            fullName: true,
-            name: true
-          }
-        }
-      }
-    },
-    rounds: {
-      include: {
-        events: true
-      }
-    }
-  }
-} satisfies Prisma.GameDefaultArgs
-
-type GameWithIncludes = Prisma.GameGetPayload<typeof _gameWithIncludesArgs>
 
 const errors = ref<SibraError[]>([])
 const game = ref<GameWithIncludes | null>(null)
@@ -73,8 +50,8 @@ async function save(data: GamePlayEvent) {
 }
 
 const overlay = useOverlay()
-
 const modalKong = overlay.create(LazyGamePlayKongModal)
+const modalMahjong = overlay.create(LazyGamePlayMahjongModal)
 
 async function kong() {
   const instanceKong = modalKong.open({
@@ -87,6 +64,26 @@ async function kong() {
       type: 'KONG',
       player: kongResult.player,
       victim: kongResult.victim
+    }
+    save(data)
+  }
+}
+
+async function mahjong() {
+  const instanceMahjong = modalMahjong.open({
+    players: players.value,
+    lastEvent: null
+  })
+
+  const mahjongResult = await instanceMahjong.result
+  if (mahjongResult) {
+    console.log('mahjongResult', mahjongResult)
+    const winnersCount = mahjongResult.winners.length
+    const data: GamePlayEvent = {
+      type: winnersCount === 3 ? 'TRIPLE_MAHJONG' : winnersCount === 2 ? 'DOUBLE_MAHJONG' : 'MAHJONG',
+      winners: mahjongResult.winners,
+      victim: mahjongResult.victim,
+      afterKong: mahjongResult.victim === -1 ? mahjongResult.afterKong : mahjongResult.robbinKong
     }
     save(data)
   }
@@ -133,6 +130,7 @@ update()
           >
             <UButton
               color="neutral"
+              @click="mahjong"
             >
               Маджонг
             </UButton>
@@ -149,7 +147,7 @@ update()
             </UButton>
           </div>
           <EventsList
-            :events="round.events"
+            :events="round.events.filter(x => x.parentId === null)"
             :players="players"
             :allow-delete="session?.user?.id === game.createdById"
             @delete-event="deleteEvent"
